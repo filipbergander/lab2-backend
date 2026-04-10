@@ -16,9 +16,9 @@ const connection = mysql.createConnection({
     database: process.env.DB_DATABASE
 });
 
-connection.connect((err) => {
-    if (err) {
-        console.log("Misslyckades med att ansluta till databasen: " + err);
+connection.connect((error) => {
+    if (error) {
+        console.log("Misslyckades med att ansluta till databasen: " + error);
         return;
     }
 
@@ -31,63 +31,88 @@ app.get("/api", (req, res) => {
 });
 
 app.get("/api/cv/experience", (req, res) => {
-    res.json({ message: "Hämta jobberfarenheter" });
+    //res.json({ message: "Hämtar jobberfarenheter" });
 
-    connection.query(`SELECT * FROM experience;`, (err, results) => {
-        if (err) {
-            res.status(500).json({ error: "Något gick fel: " + err })
-            console.log(results);
+    // Hämtar in allt från tabellen experience inom databasen
+    connection.query(`SELECT * FROM experience;`, (error, results) => {
+        if (error) {
+            res.status(500).json({ error: "Något gick fel: " + error });
+            return;
+        }
+
+        console.log(results);
+        if (results.length === 0) {
+            res.status(404).json({ message: "Inga jobberfarenheter hittades" });
+        } else {
+            res.json(results);
         }
     });
 });
 
 app.post("/api/cv/experience", (req, res) => {
-    let id = req.body.id;
     let companyName = req.body.companyName;
     let jobTitle = req.body.jobTitle;
     let location = req.body.location;
     let description = req.body.description;
 
-    // Felmeddelanden struktur
+    // Felmeddelande struktur
     let errors = {
         message: "",
         detail: "",
-        https_response: {
-
-        }
+        https_response: {}
     };
 
-    if (!id || !companyName || !jobTitle || !location || !description) {
+    // Om något av fälten inte är angivna körs inte den senare sql-frågan
+    if (!companyName || !jobTitle || !location || !description) {
 
         // Error-meddelande
         errors.message = "Fel inmatade data";
-        errors.detail = "Inkludera korrekta värden i alla fälten: id, companyName, jobTitle, location, description";
+        errors.detail = "Inkludera korrekta värden i fälten: companyName, jobTitle, location, description";
 
         // Respons-kod
         errors.https_response.message = "Bad Request";
         errors.https_response.code = 400;
 
         res.status(400).json(errors);
-        //return;
+        return;
     }
 
-    let newExperience = {
-        id: id,
-        companyName: companyName,
-        jobTitle: jobTitle,
-        location: location,
-        description: description
-    };
+    // Infogar data i databasen
+    connection.query(
+        `INSERT INTO experience (companyName, jobTitle, location, description) VALUES (?, ?, ?, ?);`, [companyName, jobTitle, location, description], (error, results) => {
+            if (error) {
+                res.status(500).json({ error: "Något gick fel: " + error });
+                return;
+            }
 
-    res.json({ message: "Ny arbetserfarenhet tillagd!", newExperience });
+            console.log("Fråga kördes: " + results);
+            let newExperience = {
+                companyName: companyName,
+                jobTitle: jobTitle,
+                location: location,
+                description: description
+            };
+            res.status(201).json({ message: "Ny arbetserfarenhet tillagd!", newExperience });
+        });
 });
 
+// För att uppdatera en arbetserfarenhet
 app.put("/api/cv/experience/:id", (req, res) => {
     res.json({ message: "Uppdaterade arbetserfarenheten: " + req.params.id });
 });
 
+// För att radera en arbetserfarenhet
 app.delete("/api/cv/experience/:id", (req, res) => {
-    res.json({ message: "Raderat arbetserfarenheten: " + req.params.id });
+    const id = req.params.id;
+
+    connection.query(
+        `DELETE FROM experience WHERE id = ?;`, [id], (error, results) => {
+            if (error) {
+                res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id + error });
+            }
+        }
+    )
+    res.json({ message: "Raderat arbetserfarenheten med ID: " + id });
 });
 
 // Startar servern
