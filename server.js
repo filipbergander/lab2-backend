@@ -1,9 +1,9 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 3000;
-const cors = require("cors");
-const mysql = require("mysql");
-require("dotenv").config();
+const port = process.env.PORT || 3000; // Använder miljövariabler för port eller port 3000
+const cors = require("cors"); // Cors som tillåter cross-origins requests
+const mysql = require("mysql"); // Mysql som databas
+require("dotenv").config(); // För att använda miljövariablerna
 
 app.use(cors());
 app.use(express.json()); // Middleware för att läsa JSON-data i requests
@@ -16,6 +16,7 @@ const connection = mysql.createConnection({
     database: process.env.DB_DATABASE
 });
 
+// Ansluter till databasen
 connection.connect((error) => {
     if (error) {
         console.log("Misslyckades med att ansluta till databasen: " + error);
@@ -26,10 +27,12 @@ connection.connect((error) => {
 });
 
 // Routes
+
 app.get("/api", (req, res) => {
     res.json({ message: "Välkommen till detta API!" });
 });
 
+// Route för att hämta alla arbetserfarenheter
 app.get("/api/cv/experience", (req, res) => {
     //res.json({ message: "Hämtar jobberfarenheter" });
 
@@ -40,7 +43,10 @@ app.get("/api/cv/experience", (req, res) => {
             return;
         }
 
+        // Visar resultatet i konsollen av frågan
         console.log(results);
+
+        // Om inga tidigare "jobb" hittades
         if (results.length === 0) {
             res.status(404).json({ message: "Inga jobberfarenheter hittades" });
         } else {
@@ -49,6 +55,7 @@ app.get("/api/cv/experience", (req, res) => {
     });
 });
 
+// Route för att lägga till en arbetserfarenhet
 app.post("/api/cv/experience", (req, res) => {
     let companyName = req.body.companyName;
     let jobTitle = req.body.jobTitle;
@@ -85,7 +92,10 @@ app.post("/api/cv/experience", (req, res) => {
                 return;
             }
 
+            // Visar resultatet av insättningen
             console.log("Fråga kördes: " + results);
+
+            // Ett objekt med det nya tillagda jobbet
             let newExperience = {
                 companyName: companyName,
                 jobTitle: jobTitle,
@@ -105,6 +115,7 @@ app.put("/api/cv/experience/:id", (req, res) => {
 app.delete("/api/cv/experience/:id", (req, res) => {
     const id = req.params.id;
 
+    // Fråga för att radera en arbetserfarenhet genom ett id
     connection.query(
         `DELETE FROM experience WHERE id = ?;`, [id], (error, results) => {
             if (error) {

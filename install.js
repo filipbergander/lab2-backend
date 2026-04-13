@@ -1,7 +1,7 @@
-const mysql = require("mysql");
-require("dotenv").config();
+const mysql = require("mysql"); // Databas
+require("dotenv").config(); // Miljövariabler
 
-// Anslutningsinställningar
+// Anslutningsinställningar genom miljövariabler
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -9,12 +9,14 @@ const connection = mysql.createConnection({
     database: process.env.DB_DATABASE
 });
 
+// Anlsuter till databasen
 connection.connect((err) => {
+    // Om något fel uppstår
     if (err) {
         console.log("Misslyckades med att ansluta till databasen: ", err);
         return;
     }
-
+    // Om anslutningen gick bra
     console.log("Ansluten till databasen " + connection.config.database + "!");
 });
 
