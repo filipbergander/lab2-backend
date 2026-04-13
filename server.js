@@ -58,6 +58,31 @@ app.get("/api/cv/experience", (req, res) => {
     });
 });
 
+// Route för att hämta en specifik arbetserfarenhet genom id
+app.get("/api/cv/experience/:id", (req, res) => {
+    //res.json({ message: "Hämtar jobberfarenheter" });
+
+    const id = req.params.id;
+
+    // Hämtar in allt från tabellen experience inom databasen
+    connection.query(`SELECT * FROM experience WHERE id = ?;`, [id], (error, results) => {
+        if (error) {
+            res.status(500).json({ error: "Något gick fel: " + error });
+            return;
+        }
+
+        // Visar resultatet i konsollen av frågan
+        console.log(results);
+
+        // Om inga tidigare "jobb" hittades
+        if (results.length === 0) {
+            res.status(404).json({ message: "Inga jobberfarenheter hittades" });
+        } else {
+            res.json(results);
+        }
+    });
+});
+
 // Route för att lägga till en arbetserfarenhet
 app.post("/api/cv/experience", (req, res) => {
     let companyName = req.body.companyName;
