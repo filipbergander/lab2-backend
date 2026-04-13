@@ -13,10 +13,10 @@ const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    ssl: {
-        rejectUnauthorized: false
-    }
+    database: process.env.DB_DATABASE
+        /*ssl: {
+            rejectUnauthorized: false
+        }*/
 });
 
 // Ansluter till databasen
@@ -111,7 +111,64 @@ app.post("/api/cv/experience", (req, res) => {
 
 // För att uppdatera en arbetserfarenhet
 app.put("/api/cv/experience/:id", (req, res) => {
-    res.json({ message: "Uppdaterade arbetserfarenheten: " + req.params.id });
+    const id = req.params.id;
+    const { companyName, jobTitle, location, description } = req.body;
+
+    // Felmeddelande struktur
+    let errors = {
+        message: "",
+        detail: "",
+        https_response: {}
+    };
+
+    // Om något av fälten inte är angivna körs inte den senare sql-frågan
+    if (!companyName || !jobTitle || !location || !description) {
+
+        // Error-meddelande
+        errors.message = "Fel inmatade data";
+        errors.detail = "Inkludera data i alla fält: companyName, jobTitle, location, description";
+
+        // Respons-kod
+        errors.https_response.message = "Bad Request";
+        errors.https_response.code = 400;
+
+        res.status(400).json(errors);
+        return;
+    }
+
+    // För att uppdatera en redan befintlig "arbetserfarenhet" genom id i databasen
+    connection.query(
+        `UPDATE experience 
+            SET companyName = ?,
+            jobTitle = ?,
+            location = ?,
+            description = ?
+            WHERE id = ?;`, [companyName, jobTitle, location, description, id], (error, results) => {
+
+            // Om något skulle gå fel
+            if (error) {
+                res.status(500).json({ error: "Något gick fel: " + error });
+                return;
+            }
+
+            // Om fel angivet ID försöker uppdateras
+            if (results.affectedRows === 0) {
+                res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id });
+                return;
+            }
+
+            // Om det lyckades
+            res.json({
+                message: "Uppdaterade arbetserfarenheten: ",
+                updated: {
+                    id,
+                    companyName,
+                    jobTitle,
+                    location,
+                    description
+                }
+            });
+        });
 });
 
 // För att radera en arbetserfarenhet
@@ -121,12 +178,23 @@ app.delete("/api/cv/experience/:id", (req, res) => {
     // Fråga för att radera en arbetserfarenhet genom ett id
     connection.query(
         `DELETE FROM experience WHERE id = ?;`, [id], (error, results) => {
+
+            // Om något skulle gå fel
             if (error) {
-                res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id + error });
+                res.status(500).json({ error: "Något gick fel: " + error });
+                return;
             }
+
+            // Om fel angivet ID försöker raderas
+            if (results.affectedRows === 0) {
+                res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id });
+                return;
+            }
+
+            // Om raderingen lyckades
+            res.json({ message: "Raderat arbetserfarenheten med ID: " + id });
         }
     )
-    res.json({ message: "Raderat arbetserfarenheten med ID: " + id });
 });
 
 // Startar servern
