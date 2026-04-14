@@ -14,7 +14,8 @@ const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE,
-    connectionLimit: 10, // Antal anslutningar i poolen som max
+    port: process.env.DB_PORT,
+    connectionLimit: 3, // Antal anslutningar i poolen som max
     waitForConnections: true, // Möjlighet att vänta på en ledig anslutning
     queueLimit: 0 // Ingen kögräns
 });
