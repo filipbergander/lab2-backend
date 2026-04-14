@@ -8,23 +8,44 @@ require("dotenv").config(); // För att använda miljövariablerna
 app.use(cors());
 app.use(express.json()); // Middleware för att läsa JSON-data i requests
 
+// Pool med flera anslutningar
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    connectionLimit: 10, // Antal anslutningar i poolen som max
+    waitForConnections: true, // Möjlighet att vänta på en ledig anslutning
+    queueLimit: 0 // Ingen kögräns
+});
+pool.getConnection((error, connection) => {
+    if (error) {
+        console.error("Misslyckades med att skapa pool: " + error);
+        return;
+    }
+    console.log("Ansluten till databasen via pool!");
+    connection.release(); // Släpper anslutningen
+});
+
+/*
 // Databasanslutningen
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE
-});
+});*/
 
 // Ansluter till databasen
-connection.connect((error) => {
+/*
+pool.connect((error) => {
     if (error) {
         console.log("Misslyckades med att ansluta till databasen: " + error);
         return;
     }
 
     console.log("Ansluten till databasen!");
-});
+});*/
 
 // Routes
 
@@ -37,7 +58,7 @@ app.get("/workexperience", (req, res) => {
     //res.json({ message: "Hämtar jobberfarenheter" });
 
     // Hämtar in allt från tabellen experience inom databasen
-    connection.query(`SELECT * FROM experience;`, (error, results) => {
+    pool.query(`SELECT * FROM experience;`, (error, results) => {
         if (error) {
             res.status(500).json({ error: "Något gick fel: " + error });
             return;
@@ -62,7 +83,7 @@ app.get("/workexperience/:id", (req, res) => {
     const id = req.params.id;
 
     // Hämtar in allt från tabellen experience inom databasen
-    connection.query(`SELECT * FROM experience WHERE id = ?;`, [id], (error, results) => {
+    pool.query(`SELECT * FROM experience WHERE id = ?;`, [id], (error, results) => {
         if (error) {
             res.status(500).json({ error: "Något gick fel: " + error });
             return;
@@ -110,7 +131,7 @@ app.post("/workexperience", (req, res) => {
     }
 
     // Infogar data i databasen
-    connection.query(
+    pool.query(
         `INSERT INTO experience (companyName, jobTitle, location, description) VALUES (?, ?, ?, ?);`, [companyName, jobTitle, location, description], (error, results) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel: " + error });
@@ -159,7 +180,7 @@ app.put("/workexperience/:id", (req, res) => {
     }
 
     // För att uppdatera en redan befintlig "arbetserfarenhet" genom id i databasen
-    connection.query(
+    pool.query(
         `UPDATE experience 
             SET companyName = ?,
             jobTitle = ?,
@@ -198,7 +219,7 @@ app.delete("/workexperience/:id", (req, res) => {
     const id = req.params.id;
 
     // Fråga för att radera en arbetserfarenhet genom ett id
-    connection.query(
+    pool.query(
         `DELETE FROM experience WHERE id = ?;`, [id], (error, results) => {
 
             // Om något skulle gå fel
