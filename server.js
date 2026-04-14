@@ -37,7 +37,7 @@ app.get("/api", (req, res) => {
 });
 
 // Route för att hämta alla arbetserfarenheter
-app.get("/api/cv/experience", (req, res) => {
+app.get("/api/workexperience", (req, res) => {
     //res.json({ message: "Hämtar jobberfarenheter" });
 
     // Hämtar in allt från tabellen experience inom databasen
@@ -60,7 +60,7 @@ app.get("/api/cv/experience", (req, res) => {
 });
 
 // Route för att hämta en specifik arbetserfarenhet genom id
-app.get("/api/cv/experience/:id", (req, res) => {
+app.get("/api/workexperience/:id", (req, res) => {
     //res.json({ message: "Hämtar jobberfarenheter" });
 
     const id = req.params.id;
@@ -85,7 +85,7 @@ app.get("/api/cv/experience/:id", (req, res) => {
 });
 
 // Route för att lägga till en arbetserfarenhet
-app.post("/api/cv/experience", (req, res) => {
+app.post("/api/workexperience", (req, res) => {
     let companyName = req.body.companyName;
     let jobTitle = req.body.jobTitle;
     let location = req.body.location;
@@ -136,7 +136,7 @@ app.post("/api/cv/experience", (req, res) => {
 });
 
 // För att uppdatera en arbetserfarenhet
-app.put("/api/cv/experience/:id", (req, res) => {
+app.put("/api/workexperience/:id", (req, res) => {
     const id = req.params.id;
     const { companyName, jobTitle, location, description } = req.body;
 
@@ -198,7 +198,7 @@ app.put("/api/cv/experience/:id", (req, res) => {
 });
 
 // För att radera en arbetserfarenhet
-app.delete("/api/cv/experience/:id", (req, res) => {
+app.delete("/api/workexperience/:id", (req, res) => {
     const id = req.params.id;
 
     // Fråga för att radera en arbetserfarenhet genom ett id
