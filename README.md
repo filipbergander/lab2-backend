@@ -6,16 +6,15 @@ APIet använder en MySQL-databas.
 Inom install.js finns kod för att kunna skapa tabellen inom databasen.
 
 ## Användning
-Nedan finns beskrivet hur man nå APIet på olika vis:
+Nedan finns beskrivet hur man når API:et på olika vis:
 
-|Metod  |Ändpunkt     |Beskrivning                                                                           |
-|-------|-------------|--------------------------------------------------------------------------------------|
-|GET    |/workexperience     |Hämtar alla sparade arbetserfarenheter.                                                      |
-|GET    |/workexperience/:ID|Hämtar en specifik arbetserfarenhet genom ID.                                             |
-|POST   |/workexperience    |Lagrar ett nytt jobb. 
-                          |
-|PUT    |/workexperience/:ID |Uppdaterar en redan sparad arbetserfarenhet.
-|DELETE |/workexperience/:ID |Raderar en specifik arbetserfarenhet, med angivet ID.                                                       |
+| Metod | Ändpunkt              | Beskrivning                                      |
+|-------|------------------------|--------------------------------------------------|
+| GET   | /workexperience        | Hämtar alla sparade arbetserfarenheter.         |
+| GET   | /workexperience/:id    | Hämtar en specifik arbetserfarenhet via ID.     |
+| POST  | /workexperience        | Lagrar en ny arbetserfarenhet.                  |
+| PUT   | /workexperience/:id    | Uppdaterar en befintlig arbetserfarenhet.       |
+| DELETE| /workexperience/:id    | Raderar en specifik arbetserfarenhet via ID.    |
 
 Ett CV-objekt returneras/skickas som JSON med följande struktur:
 ```
