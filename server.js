@@ -14,9 +14,6 @@ const connection = mysql.createConnection({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE
-        /*ssl: {
-            rejectUnauthorized: false
-        }*/
 });
 
 // Ansluter till databasen
@@ -30,6 +27,10 @@ connection.connect((error) => {
 });
 
 // Routes
+
+app.get("/", (req, res) => {
+    res.json({ message: "Nu körs API:et!" });
+});
 
 app.get("/api", (req, res) => {
     res.json({ message: "Välkommen till detta API!" });
