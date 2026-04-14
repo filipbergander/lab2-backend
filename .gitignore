@@ -3,3 +3,6 @@ index.html
 .env
 arkiv.js
 mysql.js
+pg.js
+installpg.js
+db.js
