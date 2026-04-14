@@ -29,8 +29,8 @@ connection.query("DROP TABLE IF EXISTS experience;", (error, results) => {
 // Skapar tabellen
 connection.query(`CREATE TABLE experience (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    companyName VARCHAR(255) NOT NULL,
-    jobTitle VARCHAR(255) NOT NULL,
+    company_name VARCHAR(255) NOT NULL,
+    job_title VARCHAR(255) NOT NULL,
     location VARCHAR(255) NOT NULL,
     description VARCHAR(255) NOT NULL);`, (error, results) => {
     if (error) throw error;

@@ -29,15 +29,11 @@ connection.connect((error) => {
 // Routes
 
 app.get("/", (req, res) => {
-    res.json({ message: "Nu körs API:et!" });
-});
-
-app.get("/api", (req, res) => {
     res.json({ message: "Välkommen till detta API!" });
 });
 
 // Route för att hämta alla arbetserfarenheter
-app.get("/api/workexperience", (req, res) => {
+app.get("/workexperience", (req, res) => {
     //res.json({ message: "Hämtar jobberfarenheter" });
 
     // Hämtar in allt från tabellen experience inom databasen
@@ -60,7 +56,7 @@ app.get("/api/workexperience", (req, res) => {
 });
 
 // Route för att hämta en specifik arbetserfarenhet genom id
-app.get("/api/workexperience/:id", (req, res) => {
+app.get("/workexperience/:id", (req, res) => {
     //res.json({ message: "Hämtar jobberfarenheter" });
 
     const id = req.params.id;
@@ -85,7 +81,7 @@ app.get("/api/workexperience/:id", (req, res) => {
 });
 
 // Route för att lägga till en arbetserfarenhet
-app.post("/api/workexperience", (req, res) => {
+app.post("/workexperience", (req, res) => {
     let companyName = req.body.companyName;
     let jobTitle = req.body.jobTitle;
     let location = req.body.location;
@@ -136,7 +132,7 @@ app.post("/api/workexperience", (req, res) => {
 });
 
 // För att uppdatera en arbetserfarenhet
-app.put("/api/workexperience/:id", (req, res) => {
+app.put("/workexperience/:id", (req, res) => {
     const id = req.params.id;
     const { companyName, jobTitle, location, description } = req.body;
 
@@ -198,7 +194,7 @@ app.put("/api/workexperience/:id", (req, res) => {
 });
 
 // För att radera en arbetserfarenhet
-app.delete("/api/workexperience/:id", (req, res) => {
+app.delete("/workexperience/:id", (req, res) => {
     const id = req.params.id;
 
     // Fråga för att radera en arbetserfarenhet genom ett id
