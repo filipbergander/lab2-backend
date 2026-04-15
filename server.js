@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 3000; // Använder miljövariabler för port eller port 3000
+const port = process.env.PORT || 5080; // Använder miljövariabler för port eller port 3000
 const cors = require("cors"); // Cors som tillåter cross-origins requests
 const mysql = require("mysql"); // Mysql som databas
 require("dotenv").config(); // För att använda miljövariablerna
@@ -13,11 +13,11 @@ const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
+    database: process.env.DB_NAME,
     port: process.env.DB_PORT,
     connectionLimit: 3, // Antal anslutningar i poolen som max
     waitForConnections: true, // Möjlighet att vänta på en ledig anslutning
-    queueLimit: 0 // Ingen kögräns
+    queueLimit: 0, // Ingen kögräns
 });
 pool.getConnection((error, connection) => {
     if (error) {
@@ -27,26 +27,6 @@ pool.getConnection((error, connection) => {
     console.log("Ansluten till databasen via pool!");
     connection.release(); // Släpper anslutningen
 });
-
-/*
-// Databasanslutningen
-const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
-});*/
-
-// Ansluter till databasen
-/*
-pool.connect((error) => {
-    if (error) {
-        console.log("Misslyckades med att ansluta till databasen: " + error);
-        return;
-    }
-
-    console.log("Ansluten till databasen!");
-});*/
 
 // Routes
 
@@ -140,7 +120,7 @@ app.post("/workexperience", (req, res) => {
             }
 
             // Visar resultatet av insättningen
-            console.log("Fråga kördes: " + results);
+            console.table("Fråga kördes: " + results);
 
             // Ett objekt med det nya tillagda jobbet
             let newExperience = {
