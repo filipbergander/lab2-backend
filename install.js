@@ -34,10 +34,14 @@ async function createTable() {
             company_name TEXT NOT NULL,
             job_title TEXT NOT NULL,
             location TEXT NOT NULL,
-            description TEXT NOT NULL);`);
+            description TEXT NOT NULL,
+            start_date DATE,
+            end_date DATE);`);
         console.log("Tabellen 'experience' skapad!");
-        await client.query(`INSERT INTO experience (company_name, job_title, location, description) VALUES
-            ('Storsjöbadet', 'Badhustekniker', 'Östersund, Sverige', 'Såg över badhusanläggningen och åtgärdade fel.');`);
+        await client.query(`INSERT INTO experience (company_name, job_title, location, description, start_date, end_date) VALUES
+            ('Storsjöbadet', 'Badhustekniker', 'Östersund', 'Såg över badhusanläggningen och åtgärdade fel.', '2015-06-19', '2016-08-20'),
+            ('Postnord AB', 'Brevbärare', 'Östersund', 'Sorterade och delade ut brev till kunder.', '2016-09-01', '2019-09-01')
+            ;`);
         console.log("Exempeldata infogad i 'experience' tabellen!");
     } catch (error) {
         console.error("Fel när tabellen skapades: ", error);

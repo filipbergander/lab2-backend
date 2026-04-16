@@ -19,7 +19,7 @@ const pool = new Pool({
         rejectUnauthorized: false
     }
 });
-
+// Försöker ansluta till pool
 pool.connect((error) => {
     if (error) {
         console.error("Misslyckades med att skapa pool: " + error);
@@ -41,18 +41,26 @@ app.get("/", async(req, res) => {
 
 // För att hämta alla arbetserfarenheter
 app.get("/workexperience", async(req, res) => {
-    try {
-        const result = await pool.query(`SELECT * FROM experience;`, (error, results) => {
+    try { // Hämtar alla jobb i fallande ordning
+        const result = await pool.query(`SELECT * FROM experience ORDER BY id DESC;`, (error, results) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel: " + error });
-                return;
-            }
-            res.json(results.rows);
-            console.log(results);
-            // Om det inte fanns några tidigare arbetserfarenheter
+            } // Om det inte fanns några tidigare arbetserfarenheter
             if (results.rows.length === 0) {
-                res.status(404).json({ message: "Inga jobberfarenheter hittades" });
+                return res.status(404).json({ message: "Inga jobberfarenheter hittades" });
             }
+            const formattedResult = results.rows.map(row => ({
+                id: row.id,
+                company_name: row.company_name,
+                job_title: row.job_title,
+                location: row.location,
+                description: row.description,
+                start_date: row.start_date.toISOString().slice(0, 10), // Formaterar datumet till yyyy-mm-dd
+                end_date: row.end_date.toISOString().slice(0, 10)
+            }));
+
+            res.json(formattedResult);
+            console.log(formattedResult);
         });
     } catch (error) {
         res.status(500).json({ error: "Något gick fel: " + error });
@@ -66,15 +74,13 @@ app.get("/workexperience/:id", async(req, res) => {
         const result = await pool.query(`SELECT * FROM experience WHERE id=$1;`, [id], (error, results) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel när ett specifikt id skulle hämtas: " + error });
-                return;
+            }
+            // Om ingenting hittades med det specifika id
+            if (results.rows.length === 0) {
+                return res.status(404).json({ message: `Inga jobberfarenheter hittades med id: ${id}` });
             }
             res.json(results.rows[0]);
             console.log(results);
-
-            // Om ingenting hittades med det specifika id
-            if (results.rows.length === 0) {
-                res.status(404).json({ message: `Inga jobberfarenheter hittades med id:  + ${id}` });
-            }
         });
     } catch (error) {
         res.status(500).json({ error: "Något gick fel: " + error });
@@ -88,12 +94,14 @@ app.post("/workexperience", async(req, res) => {
         let job_title = req.body.job_title;
         let location = req.body.location;
         let description = req.body.description;
-        if (!company_name && !job_title && !location && !description) {
-            res.status(400).json({ error: "Inkludera korrekta värden i alla fälten: company_name, job_title, location, description" });
+        let start_date = req.body.start_date;
+        let end_date = req.body.end_date;
+        if (!company_name && !job_title && !location && !description && !start_date && !end_date) {
+            res.status(400).json({ error: "Inkludera korrekta värden i alla fälten: company_name, job_title, location, description, start_date, end_date" });
             return;
         }
         const result = await pool.query(
-            "INSERT INTO experience (company_name, job_title, location, description) VALUES ($1, $2, $3, $4)", [company_name, job_title, location, description], (error, results) => {
+            "INSERT INTO experience (company_name, job_title, location, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6)", [company_name, job_title, location, description, start_date, end_date], (error, results) => {
                 if (error) {
                     res.status(500).json({ error: "Något gick fel: " + error });
                     return;
@@ -103,7 +111,9 @@ app.post("/workexperience", async(req, res) => {
                     company_name: company_name,
                     job_title: job_title,
                     location: location,
-                    description: description
+                    description: description,
+                    start_date: start_date,
+                    end_date: end_date
                 };
                 res.status(201).json({ message: "Ny arbetserfarenhet tillagd!", newExperience });
             }
@@ -117,10 +127,10 @@ app.post("/workexperience", async(req, res) => {
 app.put("/workexperience/:id", async(req, res) => {
     try {
         const id = req.params.id;
-        const { company_name, job_title, location, description } = req.body;
+        const { company_name, job_title, location, description, start_date, end_date } = req.body;
 
         const result = await pool.query(
-            "UPDATE experience SET company_name = $1, job_title = $2, location = $3, description = $4 WHERE id = $5", [company_name, job_title, location, description, id], (error, results) => {
+            "UPDATE experience SET company_name = $1, job_title = $2, location = $3, description = $4, start_date = $5, end_date = $6 WHERE id = $7", [company_name, job_title, location, description, start_date, end_date, id], (error, results) => {
                 if (error) {
                     res.status(500).json({ error: "Något gick fel: " + error });
                     return;
@@ -136,7 +146,9 @@ app.put("/workexperience/:id", async(req, res) => {
                         company_name,
                         job_title,
                         location,
-                        description
+                        description,
+                        start_date,
+                        end_date
                     }
                 });
             }

@@ -2,7 +2,7 @@
 Detta repository innehåller kod för ett enklare REST API byggt med Express.
 
 ## Installation, databas
-APIet använder en MySQL-databas.
+API:et använder en PostgreSQL-databas.
 Inom install.js finns kod för att kunna skapa tabellen inom databasen.
 
 ## Användning
@@ -19,10 +19,12 @@ Nedan finns beskrivet hur man når API:et på olika vis:
 Ett CV-objekt returneras/skickas som JSON med följande struktur:
 ```
  {
-  "companyName" : "Storsjöbadet",
-  "jobTitle": "Badhustekniker",
+  "company_name" : "Storsjöbadet",
+  "job_title": "Badhustekniker",
   "location": "Östersund",
-  "description": "Se över badhusanläggningen och åtgärda problem"
+  "description": "Se över badhusanläggningen och åtgärda problem",
+  "start_date": "2015-06-19",
+  "end_date": "2016-08-20"
 }
 ```
 
@@ -30,9 +32,11 @@ För att uppdatera eller radera en CV-post behöver ID tas med. Struktur:
 ```
  {
    "id": "4",
-  "companyName" : "Storsjöbadet",
-  "jobTitle": "Badhustekniker",
+  "company_name" : "Storsjöbadet",
+  "job_title": "Badhustekniker",
   "location": "Östersund",
-  "description": "Se över badhusanläggningen och åtgärda problem"
+  "description": "Se över badhusanläggningen och åtgärda problem",
+  "start_date": "2015-06-19",
+  "end_date": "2016-08-20"
 }
 ```
