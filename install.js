@@ -43,6 +43,9 @@ async function createTable() {
             ('Postnord AB', 'Brevbärare', 'Östersund', 'Sorterade och delade ut brev till kunder.', '2016-09-01', '2019-09-01')
             ;`);
         console.log("Exempeldata infogad i 'experience' tabellen!");
+
+        await client.query('ALTER TABLE experience ADD CONSTRAINT unique_experience UNIQUE (company_name, job_title, location, start_date, end_date);');
+        console.log("Unik constraint tillagd som förhindrar dubletter i 'experience' tabellen!");
     } catch (error) {
         console.error("Fel när tabellen skapades: ", error);
     } finally {
