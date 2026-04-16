@@ -8,9 +8,15 @@ En liveversion av APIet finns tillgänglig på följande URL: https://lab2-backe
 API:et använder en PostgreSQL-databas.
 Inom install.js finns kod för att kunna skapa tabellen 'work_experience' inom databasen. 
 Klona ner källkodsfilerna, kör kommando npm install för att installera nödvändiga npm-paket. Kör installations-skriptet install.js. Installations-skriptet skapar databastabellen enligt nedanstående:
-| Tabell-namn |                    Fält                                             |
-|-------|------------------------|--------------------------------------------------|
-| Tabell   | id(SERIAL), company_name(TEXT), job_title (TEXT), location (TEXT), description (TEXT), start_date (DATE), end_date (DATE)        |
+| Fält          | Typ     | Beskrivning |
+|---------------|----------|-------------|
+| id            | SERIAL   | Primärnyckel (auto_increment) |
+| company_name  | TEXT     | Företagets namn |
+| job_title     | TEXT     | Jobbtitel |
+| location      | TEXT     | Ort |
+| description   | TEXT     | Beskrivning av arbetsuppgifter |
+| start_date    | DATE     | Startdatum |
+| end_date      | DATE     | Slutdatum |
 
 ## Användning
 Nedan finns beskrivet hur man når API:et på olika vis:
