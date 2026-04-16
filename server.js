@@ -1,227 +1,169 @@
+const { Pool } = require("pg"); // Postgresql
+require("dotenv").config(); // För att använda miljövariablerna
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5080; // Använder miljövariabler för port eller port 3000
+const port = process.env.PORT || 3000; // Använder miljövariabler för port eller port 3000
 const cors = require("cors"); // Cors som tillåter cross-origins requests
-const mysql = require("mysql"); // Mysql som databas
-require("dotenv").config(); // För att använda miljövariablerna
 
 app.use(cors());
 app.use(express.json()); // Middleware för att läsa JSON-data i requests
 
 // Pool med flera anslutningar
-const pool = mysql.createPool({
+const pool = new Pool({
     host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
     port: process.env.DB_PORT,
-    connectionLimit: 3, // Antal anslutningar i poolen som max
-    waitForConnections: true, // Möjlighet att vänta på en ledig anslutning
-    queueLimit: 0, // Ingen kögräns
+    user: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
-pool.getConnection((error, connection) => {
+
+pool.connect((error) => {
     if (error) {
         console.error("Misslyckades med att skapa pool: " + error);
         return;
+    } else {
+        console.log("Ansluten till databasen via pool!");
     }
-    console.log("Ansluten till databasen via pool!");
-    connection.release(); // Släpper anslutningen
 });
-
 // Routes
 
-app.get("/", (req, res) => {
-    res.json({ message: "Välkommen till detta API!" });
-});
-
-// Route för att hämta alla arbetserfarenheter
-app.get("/workexperience", (req, res) => {
-    //res.json({ message: "Hämtar jobberfarenheter" });
-
-    // Hämtar in allt från tabellen experience inom databasen
-    pool.query(`SELECT * FROM experience;`, (error, results) => {
-        if (error) {
-            res.status(500).json({ error: "Något gick fel: " + error });
-            return;
-        }
-
-        // Visar resultatet i konsollen av frågan
-        console.log(results);
-
-        // Om inga tidigare "jobb" hittades
-        if (results.length === 0) {
-            res.status(404).json({ message: "Inga jobberfarenheter hittades" });
-        } else {
-            res.json(results);
-        }
-    });
-});
-
-// Route för att hämta en specifik arbetserfarenhet genom id
-app.get("/workexperience/:id", (req, res) => {
-    //res.json({ message: "Hämtar jobberfarenheter" });
-
-    const id = req.params.id;
-
-    // Hämtar in allt från tabellen experience inom databasen
-    pool.query(`SELECT * FROM experience WHERE id = ?;`, [id], (error, results) => {
-        if (error) {
-            res.status(500).json({ error: "Något gick fel: " + error });
-            return;
-        }
-
-        // Visar resultatet i konsollen av frågan
-        console.log(results);
-
-        // Om inga tidigare "jobb" hittades
-        if (results.length === 0) {
-            res.status(404).json({ message: "Inga jobberfarenheter hittades" });
-        } else {
-            res.json(results);
-        }
-    });
-});
-
-// Route för att lägga till en arbetserfarenhet
-app.post("/workexperience", (req, res) => {
-    let companyName = req.body.companyName;
-    let jobTitle = req.body.jobTitle;
-    let location = req.body.location;
-    let description = req.body.description;
-
-    // Felmeddelande struktur
-    let errors = {
-        message: "",
-        detail: "",
-        https_response: {}
-    };
-
-    // Om något av fälten inte är angivna körs inte den senare sql-frågan
-    if (!companyName || !jobTitle || !location || !description) {
-
-        // Error-meddelande
-        errors.message = "Fel inmatade data";
-        errors.detail = "Inkludera korrekta värden i fälten: companyName, jobTitle, location, description";
-
-        // Respons-kod
-        errors.https_response.message = "Bad Request";
-        errors.https_response.code = 400;
-
-        res.status(400).json(errors);
-        return;
+// Startsidan
+app.get("/", async(req, res) => {
+    try {
+        res.json({ message: "Välkommen till detta API!" });
+    } catch (error) {
+        res.status(500).json({ error: "Något gick fel: " + error });
     }
+});
 
-    // Infogar data i databasen
-    pool.query(
-        `INSERT INTO experience (companyName, jobTitle, location, description) VALUES (?, ?, ?, ?);`, [companyName, jobTitle, location, description], (error, results) => {
+// För att hämta alla arbetserfarenheter
+app.get("/workexperience", async(req, res) => {
+    try {
+        const result = await pool.query(`SELECT * FROM experience;`, (error, results) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel: " + error });
                 return;
             }
-
-            // Visar resultatet av insättningen
-            console.table("Fråga kördes: " + results);
-
-            // Ett objekt med det nya tillagda jobbet
-            let newExperience = {
-                companyName: companyName,
-                jobTitle: jobTitle,
-                location: location,
-                description: description
-            };
-            res.status(201).json({ message: "Ny arbetserfarenhet tillagd!", newExperience });
+            res.json(results.rows);
+            console.log(results);
+            // Om det inte fanns några tidigare arbetserfarenheter
+            if (results.rows.length === 0) {
+                res.status(404).json({ message: "Inga jobberfarenheter hittades" });
+            }
         });
+    } catch (error) {
+        res.status(500).json({ error: "Något gick fel: " + error });
+    }
+});
+
+// För att hämta en specifik arbetserfarenhet genom id
+app.get("/workexperience/:id", async(req, res) => {
+    try {
+        let id = req.params.id; // Det specifika id som ska skickas med i frågan
+        const result = await pool.query(`SELECT * FROM experience WHERE id=$1;`, [id], (error, results) => {
+            if (error) {
+                res.status(500).json({ error: "Något gick fel när ett specifikt id skulle hämtas: " + error });
+                return;
+            }
+            res.json(results.rows[0]);
+            console.log(results);
+
+            // Om ingenting hittades med det specifika id
+            if (results.rows.length === 0) {
+                res.status(404).json({ message: `Inga jobberfarenheter hittades med id:  + ${id}` });
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Något gick fel: " + error });
+    }
+});
+
+// För att lägga till en ny arbetserfarenhet
+app.post("/workexperience", async(req, res) => {
+    try {
+        let company_name = req.body.company_name;
+        let job_title = req.body.job_title;
+        let location = req.body.location;
+        let description = req.body.description;
+        if (!company_name && !job_title && !location && !description) {
+            res.status(400).json({ error: "Inkludera korrekta värden i alla fälten: company_name, job_title, location, description" });
+            return;
+        }
+        const result = await pool.query(
+            "INSERT INTO experience (company_name, job_title, location, description) VALUES ($1, $2, $3, $4)", [company_name, job_title, location, description], (error, results) => {
+                if (error) {
+                    res.status(500).json({ error: "Något gick fel: " + error });
+                    return;
+                }
+                console.log("Frågan kördes: " + results);
+                let newExperience = {
+                    company_name: company_name,
+                    job_title: job_title,
+                    location: location,
+                    description: description
+                };
+                res.status(201).json({ message: "Ny arbetserfarenhet tillagd!", newExperience });
+            }
+        );
+    } catch (error) {
+        res.status(500).json({ error: "Något gick fel: " + error });
+    }
 });
 
 // För att uppdatera en arbetserfarenhet
-app.put("/workexperience/:id", (req, res) => {
-    const id = req.params.id;
-    const { companyName, jobTitle, location, description } = req.body;
+app.put("/workexperience/:id", async(req, res) => {
+    try {
+        const id = req.params.id;
+        const { company_name, job_title, location, description } = req.body;
 
-    // Felmeddelande struktur
-    let errors = {
-        message: "",
-        detail: "",
-        https_response: {}
-    };
-
-    // Om något av fälten inte är angivna körs inte den senare sql-frågan
-    if (!companyName || !jobTitle || !location || !description) {
-
-        // Error-meddelande
-        errors.message = "Fel inmatade data";
-        errors.detail = "Inkludera data i alla fält: companyName, jobTitle, location, description";
-
-        // Respons-kod
-        errors.https_response.message = "Bad Request";
-        errors.https_response.code = 400;
-
-        res.status(400).json(errors);
-        return;
-    }
-
-    // För att uppdatera en redan befintlig "arbetserfarenhet" genom id i databasen
-    pool.query(
-        `UPDATE experience 
-            SET companyName = ?,
-            jobTitle = ?,
-            location = ?,
-            description = ?
-            WHERE id = ?;`, [companyName, jobTitle, location, description, id], (error, results) => {
-
-            // Om något skulle gå fel
-            if (error) {
-                res.status(500).json({ error: "Något gick fel: " + error });
-                return;
-            }
-
-            // Om fel angivet ID försöker uppdateras
-            if (results.affectedRows === 0) {
-                res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id });
-                return;
-            }
-
-            // Om det lyckades
-            res.json({
-                message: "Uppdaterade arbetserfarenheten: ",
-                updated: {
-                    id,
-                    companyName,
-                    jobTitle,
-                    location,
-                    description
+        const result = await pool.query(
+            "UPDATE experience SET company_name = $1, job_title = $2, location = $3, description = $4 WHERE id = $5", [company_name, job_title, location, description, id], (error, results) => {
+                if (error) {
+                    res.status(500).json({ error: "Något gick fel: " + error });
+                    return;
                 }
-            });
-        });
+                if (results.rowCount === 0) {
+                    res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id });
+                    return;
+                }
+                res.json({
+                    message: `Uppdaterade arbetserfarenheten: ${id}`,
+                    updated: {
+                        id,
+                        company_name,
+                        job_title,
+                        location,
+                        description
+                    }
+                });
+            }
+        );
+    } catch (error) {
+        res.status(500).json({ error: "Något gick fel: " + error });
+    }
 });
 
 // För att radera en arbetserfarenhet
-app.delete("/workexperience/:id", (req, res) => {
-    const id = req.params.id;
+app.delete("/workexperience/:id", async(req, res) => {
 
-    // Fråga för att radera en arbetserfarenhet genom ett id
-    pool.query(
-        `DELETE FROM experience WHERE id = ?;`, [id], (error, results) => {
-
-            // Om något skulle gå fel
-            if (error) {
-                res.status(500).json({ error: "Något gick fel: " + error });
-                return;
-            }
-
-            // Om fel angivet ID försöker raderas
-            if (results.affectedRows === 0) {
-                res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id });
-                return;
-            }
-
-            // Om raderingen lyckades
-            res.json({ message: "Raderat arbetserfarenheten med ID: " + id });
+    try {
+        const id = req.params.id;
+        const result = await pool.query(
+            "DELETE FROM experience WHERE id = $1", [id]);
+        // Om det inte finns något arbetserfarenhet med just det specifika id
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: `Ingen arbetserfarenhet hittades med id ${id}` });
         }
-    )
+        res.json({ message: "Raderat arbetserfarenheten med id: " + id });
+    } catch (error) {
+        res.status(500).json({ error: `Något gick fel när kursen ${id} skulle raderas: ` + error });
+    }
 });
 
-// Startar servern
+// Starta applikation
 app.listen(port, () => {
     console.log("Servern startade på port: " + port);
     console.log("Länk: http://localhost:" + port);

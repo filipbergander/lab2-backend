@@ -1,40 +1,47 @@
-const mysql = require("mysql"); // Databas
+const { Client } = require("pg"); // Postgresql
 require("dotenv").config(); // Miljövariabler
 
 // Anslutningsinställningar genom miljövariabler
-const connection = mysql.createConnection({
+const client = new Client({
     host: process.env.DB_HOST,
-    user: process.env.DB_USER,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT
-});
-
-// Anlsuter till databasen
-connection.connect((err) => {
-    // Om något fel uppstår
-    if (err) {
-        console.log("Misslyckades med att ansluta till databasen: ", err);
-        return;
+    database: process.env.DB_DATABASE,
+    ssl: {
+        rejectUnauthorized: false
     }
-    // Om anslutningen gick bra
-    console.log("Ansluten till databasen " + connection.config.database + "!");
 });
 
-// SQL-fråga skapa tabell
-// Om den redan existerar
-connection.query("DROP TABLE IF EXISTS experience;", (error, results) => {
-    if (error) throw error;
-    console.log("Tabellen 'experience' raderad! (om den existerade redan)");
+// Ansluter till databasen och visar error om det misslyckas, annars skapas tabellen och data läggs till
+client.connect((error) => {
+    if (error) {
+        console.log('Misslyckades med att ansluta till databasen: ', error);
+        return;
+    } else {
+        console.log('Anslutningen till databasen lyckades!');
+        createTable();
+    }
 });
-// Skapar tabellen
-connection.query(`CREATE TABLE experience (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    company_name VARCHAR(255) NOT NULL,
-    job_title VARCHAR(255) NOT NULL,
-    location VARCHAR(255) NOT NULL,
-    description VARCHAR(255) NOT NULL);`, (error, results) => {
-    if (error) throw error;
-    console.log("Tabellen 'experience' skapad!");
-    connection.end();
-});
+
+async function createTable() {
+    try {
+        await client.query("DROP TABLE IF EXISTS experience;");
+        console.log("Tabellen 'experience' raderad! (om den existerade redan)");
+
+        await client.query(`CREATE TABLE experience (
+            id SERIAL PRIMARY KEY,
+            company_name TEXT NOT NULL,
+            job_title TEXT NOT NULL,
+            location TEXT NOT NULL,
+            description TEXT NOT NULL);`);
+        console.log("Tabellen 'experience' skapad!");
+        await client.query(`INSERT INTO experience (company_name, job_title, location, description) VALUES
+            ('Storsjöbadet', 'Badhustekniker', 'Östersund, Sverige', 'Såg över badhusanläggningen och åtgärdade fel.');`);
+        console.log("Exempeldata infogad i 'experience' tabellen!");
+    } catch (error) {
+        console.error("Fel när tabellen skapades: ", error);
+    } finally {
+        await client.end();
+    }
+}
