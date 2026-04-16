@@ -42,7 +42,7 @@ app.get("/", async(req, res) => {
 // För att hämta alla arbetserfarenheter
 app.get("/workexperience", async(req, res) => {
     try { // Hämtar alla jobb i fallande ordning
-        const result = await pool.query(`SELECT * FROM experience ORDER BY id DESC;`, (error, results) => {
+        const result = await pool.query(`SELECT * FROM work_experience ORDER BY id DESC;`, (error, results) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel: " + error });
             } // Om det inte fanns några tidigare arbetserfarenheter
@@ -71,7 +71,7 @@ app.get("/workexperience", async(req, res) => {
 app.get("/workexperience/:id", async(req, res) => {
     try {
         let id = req.params.id; // Det specifika id som ska skickas med i frågan
-        const result = await pool.query(`SELECT * FROM experience WHERE id=$1;`, [id], (error, results) => {
+        const result = await pool.query(`SELECT * FROM work_experience WHERE id=$1;`, [id], (error, results) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel när ett specifikt id skulle hämtas: " + error });
             }
@@ -101,7 +101,7 @@ app.post("/workexperience", async(req, res) => {
             return;
         }
         const result = await pool.query(
-            "INSERT INTO experience (company_name, job_title, location, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6)", [company_name, job_title, location, description, start_date, end_date], (error, results) => {
+            "INSERT INTO work_experience (company_name, job_title, location, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6)", [company_name, job_title, location, description, start_date, end_date], (error, results) => {
                 if (error) {
                     res.status(500).json({ error: "Något gick fel: " + error });
                     return;
@@ -130,7 +130,7 @@ app.put("/workexperience/:id", async(req, res) => {
         const { company_name, job_title, location, description, start_date, end_date } = req.body;
 
         const result = await pool.query(
-            "UPDATE experience SET company_name = $1, job_title = $2, location = $3, description = $4, start_date = $5, end_date = $6 WHERE id = $7", [company_name, job_title, location, description, start_date, end_date, id], (error, results) => {
+            "UPDATE work_experience SET company_name = $1, job_title = $2, location = $3, description = $4, start_date = $5, end_date = $6 WHERE id = $7", [company_name, job_title, location, description, start_date, end_date, id], (error, results) => {
                 if (error) {
                     res.status(500).json({ error: "Något gick fel: " + error });
                     return;
@@ -164,7 +164,7 @@ app.delete("/workexperience/:id", async(req, res) => {
     try {
         const id = req.params.id;
         const result = await pool.query(
-            "DELETE FROM experience WHERE id = $1", [id]);
+            "DELETE FROM work_experience WHERE id = $1", [id]);
         // Om det inte finns något arbetserfarenhet med just det specifika id
         if (result.rowCount === 0) {
             return res.status(404).json({ error: `Ingen arbetserfarenhet hittades med id ${id}` });

@@ -26,8 +26,9 @@ client.connect((error) => {
 
 async function createTable() {
     try {
-        await client.query("DROP TABLE IF EXISTS experience;");
-        console.log("Tabellen 'experience' raderad! (om den existerade redan)");
+        // Kod för att testa databasen på enklare vis
+        /*await client.query("DROP TABLE IF EXISTS experience;");
+        console.log("Tabellen 'experience' raderad! (om den existerade redan)");*/
 
         await client.query(`CREATE TABLE experience (
             id SERIAL PRIMARY KEY,
