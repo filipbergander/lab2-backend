@@ -3,7 +3,8 @@ index.html
 .env
 arkiv.js
 mysql.js
-pg.js
+pgarkiv.js
 installpg.js
 db.js
 questions.md
+pgsecond.js
