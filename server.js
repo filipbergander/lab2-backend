@@ -46,7 +46,7 @@ app.get("/workexperience", async(req, res) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel: " + error });
             } // Om det inte fanns några tidigare arbetserfarenheter
-            if (results.rows.length === 0) {
+            if (!results || !results.rows) {
                 return res.status(404).json({ message: "Inga jobberfarenheter hittades" });
             }
             const formattedResult = results.rows.map(row => ({
@@ -76,7 +76,7 @@ app.get("/workexperience/:id", async(req, res) => {
                 res.status(500).json({ error: "Något gick fel när ett specifikt id skulle hämtas: " + error });
             }
             // Om ingenting hittades med det specifika id
-            if (results.rows.length === 0) {
+            if (!results || !results.rows) {
                 return res.status(404).json({ message: `Inga jobberfarenheter hittades med id: ${id}` });
             }
             res.json(results.rows[0]);
@@ -135,7 +135,8 @@ app.put("/workexperience/:id", async(req, res) => {
                     res.status(500).json({ error: "Något gick fel: " + error });
                     return;
                 }
-                if (results.rowCount === 0) {
+                // Om det inte finns något resultat eller arbetserfarenhet med just det specifika id
+                if (!results || !results.rows) {
                     res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id });
                     return;
                 }
@@ -165,8 +166,8 @@ app.delete("/workexperience/:id", async(req, res) => {
         const id = req.params.id;
         const result = await pool.query(
             "DELETE FROM work_experience WHERE id = $1", [id]);
-        // Om det inte finns något arbetserfarenhet med just det specifika id
-        if (result.rowCount === 0) {
+        // Om det inte finns något resultat eller arbetserfarenhet med just det specifika id
+        if (!results || !results.rows) {
             return res.status(404).json({ error: `Ingen arbetserfarenhet hittades med id ${id}` });
         }
         res.json({ message: "Raderat arbetserfarenheten med id: " + id });

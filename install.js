@@ -28,7 +28,7 @@ async function createTable() {
     try {
         // Kod för att testa databasen på enklare vis
         /*await client.query("DROP TABLE IF EXISTS work_experience;");
-        console.log("Tabellen 'experience' raderad! (om den existerade redan)");*/
+        console.log("Tabellen 'work_experience' raderad! (om den existerade redan)");*/
 
         await client.query(`CREATE TABLE work_experience (
             id SERIAL PRIMARY KEY,
@@ -38,15 +38,15 @@ async function createTable() {
             description TEXT NOT NULL,
             start_date DATE,
             end_date DATE);`);
-        console.log("Tabellen 'experience' skapad!");
+        console.log("Tabellen 'work_experience' skapad!");
         await client.query(`INSERT INTO work_experience (company_name, job_title, location, description, start_date, end_date) VALUES
             ('Storsjöbadet', 'Badhustekniker', 'Östersund', 'Såg över badhusanläggningen och åtgärdade fel.', '2015-06-19', '2016-08-20'),
             ('Postnord AB', 'Brevbärare', 'Östersund', 'Sorterade och delade ut brev till kunder.', '2016-09-01', '2019-09-01')
             ;`);
-        console.log("Exempeldata infogad i 'experience' tabellen!");
+        console.log("Exempeldata infogad i 'work_experience' tabellen!");
 
         await client.query('ALTER TABLE work_experience ADD CONSTRAINT unique_experience UNIQUE (company_name, job_title, location, start_date, end_date);');
-        console.log("Unik constraint tillagd som förhindrar dubletter i 'experience' tabellen!");
+        console.log("Unik constraint tillagd som förhindrar dubletter i 'work_experience' tabellen!");
     } catch (error) {
         console.error("Fel när tabellen skapades: ", error);
     } finally {
