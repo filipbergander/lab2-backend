@@ -42,14 +42,14 @@ app.get("/", async(req, res) => {
 // För att hämta alla arbetserfarenheter
 app.get("/workexperience", async(req, res) => {
     try { // Hämtar alla jobb i fallande ordning
-        const result = await pool.query(`SELECT * FROM work_experience ORDER BY id DESC;`, (error, results) => {
+        const result = await pool.query(`SELECT * FROM work_experience ORDER BY id DESC;`, (error, result) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel: " + error });
             } // Om det inte fanns några tidigare arbetserfarenheter
-            if (!results || !results.rows) {
+            if (!result || !result.rows) {
                 return res.status(404).json({ message: "Inga jobberfarenheter hittades" });
             }
-            const formattedResult = results.rows.map(row => ({
+            const formattedResult = result.rows.map(row => ({
                 id: row.id,
                 company_name: row.company_name,
                 job_title: row.job_title,
@@ -71,7 +71,7 @@ app.get("/workexperience", async(req, res) => {
 app.get("/workexperience/:id", async(req, res) => {
     try {
         let id = req.params.id; // Det specifika id som ska skickas med i frågan
-        const result = await pool.query(`SELECT * FROM work_experience WHERE id=$1;`, [id], (error, results) => {
+        const results = await pool.query(`SELECT * FROM work_experience WHERE id=$1;`, [id], (error, results) => {
             if (error) {
                 res.status(500).json({ error: "Något gick fel när ett specifikt id skulle hämtas: " + error });
             }
@@ -100,7 +100,7 @@ app.post("/workexperience", async(req, res) => {
             res.status(400).json({ error: "Inkludera korrekta värden i alla fälten: company_name, job_title, location, description, start_date, end_date" });
             return;
         }
-        const result = await pool.query(
+        const results = await pool.query(
             "INSERT INTO work_experience (company_name, job_title, location, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6)", [company_name, job_title, location, description, start_date, end_date], (error, results) => {
                 if (error) {
                     res.status(500).json({ error: "Något gick fel: " + error });
@@ -130,13 +130,13 @@ app.put("/workexperience/:id", async(req, res) => {
         const { company_name, job_title, location, description, start_date, end_date } = req.body;
 
         const result = await pool.query(
-            "UPDATE work_experience SET company_name = $1, job_title = $2, location = $3, description = $4, start_date = $5, end_date = $6 WHERE id = $7", [company_name, job_title, location, description, start_date, end_date, id], (error, results) => {
+            "UPDATE work_experience SET company_name = $1, job_title = $2, location = $3, description = $4, start_date = $5, end_date = $6 WHERE id = $7", [company_name, job_title, location, description, start_date, end_date, id], (error, result) => {
                 if (error) {
                     res.status(500).json({ error: "Något gick fel: " + error });
                     return;
                 }
                 // Om det inte finns något resultat eller arbetserfarenhet med just det specifika id
-                if (!results || !results.rows) {
+                if (!result || !result.rows) {
                     res.status(404).json({ error: "Ingen arbetserfarenhet hittades med id: " + id });
                     return;
                 }
@@ -167,7 +167,7 @@ app.delete("/workexperience/:id", async(req, res) => {
         const result = await pool.query(
             "DELETE FROM work_experience WHERE id = $1", [id]);
         // Om det inte finns något resultat eller arbetserfarenhet med just det specifika id
-        if (!results || !results.rows) {
+        if (!result || !result.rows) {
             return res.status(404).json({ error: `Ingen arbetserfarenhet hittades med id ${id}` });
         }
         res.json({ message: "Raderat arbetserfarenheten med id: " + id });
